@@ -50,6 +50,7 @@ window.onload = function()
     const img_button = "img/button.png";
     const img_font = "img/font.png";
     const img_input = "img/input.png";
+    const img_meeting = "img/meeting.png";
     const img_message = "img/message.png";
     const img_office = "img/office.png";
     const img_ranking = "img/ranking.png";
@@ -57,7 +58,7 @@ window.onload = function()
     
     // フレームワーク
     var game = new Game(480, 320);
-    game.preload(img_button, img_font, img_input, img_message, img_office, img_ranking, img_worker);
+    game.preload(img_button, img_font, img_input, img_meeting, img_message, img_office, img_ranking, img_worker);
     game.fps = 30;
     orientationChange(game);
     
@@ -125,7 +126,7 @@ window.onload = function()
         },
         clear: function()
         {
-            this.frame = -1;
+            this.frame = 0;
             this.x = this.width * -1;
             this.y = this.height * -1;
         }
@@ -156,17 +157,18 @@ window.onload = function()
         },
         enterframe: function()
         {
+            this.visible = true;
             if(this.cutover)
             {
                 this.frame = [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7];
             }
             else if(this.rest)
             {
-                this.frame = -1;
+                this.visible = false;
             }
             else if(this.hp <= 0)
             {
-                this.clear();
+                this.visible = false;
             }
             else if(this.hp <= 1)
             {
@@ -215,6 +217,10 @@ window.onload = function()
         {
             this.hp = this.maxHp;
         },
+        setHp: function(val)
+        {
+            this.hp = val;
+        },
         setRest: function(flg)
         {
             this.rest = flg;
@@ -225,7 +231,7 @@ window.onload = function()
         },
         clear: function()
         {
-            this.frame = -1;
+            this.frame = 0;
             this.x = this.width * -1;
             this.y = this.height * -1;
             this.hp = 0;
@@ -263,7 +269,7 @@ window.onload = function()
         },
         clear: function()
         {
-            this.frame = -1;
+            this.frame = 0;
             this.x = this.width * -1;
             this.y = this.height * -1;
         }
@@ -286,10 +292,12 @@ window.onload = function()
             }
             this.clear();
         },
-        set: function(...mes)
+        // set: function(...mes)
+        set: function()
         {
+            var mes = arguments;
             this.clear();
-            this.frame = -1;
+            this.frame = 0;
             this.x = game.width / 2 - this.width / 2;
             this.y = 24;
             var a = 0;
@@ -298,24 +306,23 @@ window.onload = function()
             for(var i = 0; i < mes.length; i++)
             {
                 a = 0;
-                this.frame++;
                 for(var j = 0; j < mes[i].length; j++)
                 {
                     if(j >= (b + 1) * 16)
                     {
                         a = 0;
                         b++;
-                        this.frame++;
                     }
                     this.moji[c].set((a + 1) * 16 + this.x, (i + b + 1) * 16 + this.y, mes[i].charAt(j));
                     a++;
                     c++;
                 }
+                this.frame = i + b;
             }
         },
         clear: function()
         {
-            this.frame = -1;
+            this.frame = 0;
             this.x = this.width * -1;
             this.y = this.height * -1;
             for(var i = 0; i < this.moji.length; i++)
@@ -364,7 +371,7 @@ window.onload = function()
         },
         clear: function()
         {
-            this.frame = -1;
+            this.frame = 0;
             this.x = this.width * -1;
             this.y = this.height * -1;
             this.id = -1;
@@ -441,7 +448,7 @@ window.onload = function()
         },
         clear: function()
         {
-            this.frame = -1;
+            this.frame = 0;
             this.character = "";
             this.x = this.width * -1;
             this.y = this.height * -1;
@@ -566,13 +573,39 @@ window.onload = function()
         },
         clear: function()
         {
-            this.frame = -1;
+            this.frame = 0;
             this.x = this.width * -1;
             this.y = this.height * -1;
             for(var i = 0; i < this.moji.length; i++)
             {
                 this.moji[i].clear();
             }
+        }
+    });
+    
+    //****************************************************
+    // 会議クラス
+    //****************************************************
+    var Meeting = Class.create(Sprite,
+    {
+        initialize: function(scene)
+        {
+            Sprite.call(this, 224, 128);
+            this.image = game.assets[img_meeting];
+            this.clear();
+            scene.addChild(this);
+        },
+        set: function(type)
+        {
+            this.frame = type;
+            this.x = game.width / 2 - this.width / 2;
+            this.y = 112;
+        },
+        clear: function()
+        {
+            this.frame = 0;
+            this.x = this.width * -1;
+            this.y = this.height * -1;
         }
     });
     
@@ -588,7 +621,14 @@ window.onload = function()
         }
         this.set = function(value)
         {
-            if(value < 0) value = 0;
+            if(value < 0)
+            {
+                value = 0;
+            }
+            else if(value > 9999)
+            {
+                value = 9999;
+            }
             var str = lpad(zenkaku(value), this.moji.length, "　");
             for(var i = 0; i < str.length; i++)
             {
@@ -616,7 +656,14 @@ window.onload = function()
         }
         this.set = function(value)
         {
-            if(value < 0) value = 0;
+            if(value < 0)
+            {
+                value = 0;
+            }
+            else if(value > 999)
+            {
+                value = 999;
+            }
             var str = lpad(zenkaku(value), this.moji.length, "　");
             for(var i = 0; i < str.length; i++)
             {
@@ -663,6 +710,7 @@ window.onload = function()
             {
                 worker[i] = new Worker(scene, i);
             }
+            var meeting = new Meeting(scene);
             var message = new Message(scene);
             var button = [];
             for(var i = 0; i < 4; i++)
@@ -740,10 +788,10 @@ window.onload = function()
                                     worker[i].subHp();
                                 }
                             }
+                            w_yosan += 3;
                             if(w_youin > 0)
                             {
                                 message.set("しんちょくか゛" + zenkaku(w_kousu) + "　あか゛った");
-                                w_yosan += 3;
                                 office.yosan -= w_yosan;
                                 office.kousu -= w_kousu;
                             }
@@ -768,10 +816,10 @@ window.onload = function()
                                     worker[i].setRest(true);
                                 }
                             }
+                            w_yosan += 3;
                             if(w_youin > 0)
                             {
                                 message.set("ほんし゛つは　おやすみて゛す");
-                                w_yosan += 3;
                                 office.yosan -= w_yosan;
                                 background.blackout(0.5);
                             }
@@ -787,6 +835,7 @@ window.onload = function()
                             var w_yosan = 0;
                             var w_kousu = 0;
                             var w_youin = 0;
+                            var w_kekka = 0;
                             for(var i = 0; i < worker.length; i++)
                             {
                                 if(worker[i].getHp() > 0)
@@ -794,31 +843,34 @@ window.onload = function()
                                     w_yosan += rand(2, 5);
                                     w_kousu += rand(2, 5);
                                     w_youin++;
+                                    worker[i].setRest(true);
                                 }
                             }
+                            w_yosan += 3;
                             if(w_youin > 0)
                             {
-                                w_yosan += 3;
                                 var w_rand = 0;
                                 if(w_youin < 6)
                                 {
-                                    w_rand = rand(0, 91);
+                                    w_rand = rand(0, 83);
                                 }
                                 else
                                 {
-                                    w_rand = rand(0, 80);
+                                    w_rand = rand(0, 72);
                                 }
                                 if(w_rand < 10)
                                 {
                                     // 0～9
-                                    message.set("こすとを　さくけ゛んしろ", "よさんか゛" + zenkaku(w_yosan) + "まん　さか゛った");
+                                    message.set("こすと　さくけ゛ん", "よさんか゛" + zenkaku(w_yosan) + "まん　さか゛った");
                                     office.yosan -= w_yosan;
+                                    w_kekka = 1;
                                 }
                                 else if(w_rand < 20)
                                 {
                                     // 10～19
-                                    message.set("は゛く゛か゛みつかった", "しんちょくか゛" + zenkaku(w_kousu) + "　さか゛った");
+                                    message.set("とつせ゛んの　しようへんこう", "しんちょくか゛" + zenkaku(w_kousu) + "　さか゛った");
                                     office.kousu += w_kousu;
+                                    w_kekka = 1;
                                 }
                                 else if(w_rand < 30)
                                 {
@@ -828,18 +880,21 @@ window.onload = function()
                                     {
                                         if(worker[i].getHp() > 0) worker[i].subHp();
                                     }
+                                    w_kekka = 1;
                                 }
                                 else if(w_rand < 40)
                                 {
                                     // 30～39
                                     message.set("ついかよさんを　けいし゛ょう", "よさんか゛" + zenkaku(w_yosan) + "まん　あか゛った");
                                     office.yosan += w_yosan;
+                                    w_kekka = 0;
                                 }
                                 else if(w_rand < 50)
                                 {
                                     // 40～49
-                                    message.set("けんあんか゛かいしょうした", "しんちょくか゛" + zenkaku(w_kousu) + "　あか゛った");
+                                    message.set("けんあんか゛かいけつした", "しんちょくか゛" + zenkaku(w_kousu) + "　あか゛った");
                                     office.kousu -= w_kousu;
+                                    w_kekka = 0;
                                 }
                                 else if(w_rand < 60)
                                 {
@@ -849,19 +904,31 @@ window.onload = function()
                                     {
                                         if(worker[i].getHp() > 0) worker[i].addHp();
                                     }
+                                    w_kekka = 0;
                                 }
-                                else if(w_rand < 70)
+                                else if(w_rand < 61)
                                 {
-                                    // 60～69
+                                    // 60
+                                    message.set("とらふ゛るて゛てつやさき゛ょう", "しゃいんのやるきか゛さか゛った");
+                                    for(var i = 0; i < worker.length; i++)
+                                    {
+                                        if(worker[i].getHp() > 0) worker[i].setHp(1);
+                                    }
+                                    w_kekka = 1;
+                                }
+                                else if(w_rand < 62)
+                                {
+                                    // 61
                                     message.set("ひんたほ゛とうに　いあんりょこう", "しゃいんのやるきか゛あか゛った");
                                     for(var i = 0; i < worker.length; i++)
                                     {
                                         if(worker[i].getHp() > 0) worker[i].fullHp();
                                     }
+                                    w_kekka = 0;
                                 }
-                                else if(w_rand < 80)
+                                else if(w_rand < 72)
                                 {
-                                    // 70～79
+                                    // 62～71
                                     message.set("かろうて゛にゅういんした", "よういんか゛ひとり　へった");
                                     for(var i = worker.length - 1; i >= 0; i--)
                                     {
@@ -871,38 +938,49 @@ window.onload = function()
                                             break;
                                         }
                                     }
+                                    w_kekka = 1;
                                 }
-                                else if(w_rand < 81)
+                                else if(w_rand < 73)
                                 {
-                                    // 80
+                                    // 72
                                     message.set("すとらいきか゛はっせい", "そしてた゛れもいなくなった");
                                     for(var i = 0; i < worker.length; i++)
                                     {
                                         if(worker[i].getHp() > 0) worker[i].clear();
                                     }
+                                    w_kekka = 1;
                                 }
-                                else if(w_rand < 91)
+                                else if(w_rand < 83)
                                 {
-                                    // 81～90
+                                    // 73～82
                                     message.set("ほんしゃからの　そ゛うえん", "よういんか゛ひとり　ふえた");
                                     for(var i = 0; i < worker.length; i++)
                                     {
                                         if(worker[i].getHp() <= 0)
                                         {
                                             worker[i].set();
+                                            worker[i].setRest(true);
                                             break;
                                         }
                                     }
+                                    w_kekka = 0;
                                 }
                                 else
                                 {
-                                    // 91
+                                    // 83
                                     message.set("よういんけいかくの　みなおし", "くうせきか゛なくなった");
                                     for(var i = 0; i < worker.length; i++)
                                     {
-                                        if(worker[i].getHp() <= 0) worker[i].set();
+                                        if(worker[i].getHp() <= 0)
+                                        {
+                                            worker[i].set();
+                                            worker[i].setRest(true);
+                                        }
                                     }
+                                    w_kekka = 0;
                                 }
+                                meeting.set(w_kekka);
+                                background.blackout(0.5);
                             }
                             else
                             {
@@ -943,6 +1021,7 @@ window.onload = function()
                         //****************************************************
                         if(touch)
                         {
+                            meeting.clear();
                             message.clear();
                             background.blackout(0);
                             for(var i = 0; i < worker.length; i++)
