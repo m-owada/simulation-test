@@ -78,4 +78,6 @@
 
 ## プレイ
 
-[ここをクリックしてください。](https://mo-simulation-test.herokuapp.com/)
+[ここをクリックしてください。](https://m-owada.github.io/simulation-test/)
+
+- 現在ランキング登録はできません。
